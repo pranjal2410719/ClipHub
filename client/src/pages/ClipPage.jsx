@@ -1,7 +1,10 @@
 import { useState, useEffect } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { Copy, Check, Save, Clock, Trash2, Key, Download, AlertCircle } from 'lucide-react'
+import { Copy, Check, Save, Clock, Trash2, Key, Download, AlertCircle, FileText, Upload } from 'lucide-react'
 import { useClipboard } from '../hooks/useClipboard'
+import { useAuth } from '../hooks/useAuth'
+import FileUpload from '../components/FileUpload'
+import AuthModal from '../components/AuthModal'
 
 const EXPIRY_OPTIONS = [
   { label: '1 min',   value: '1m'  },
@@ -20,8 +23,11 @@ export default function ClipPage() {
   const [saved, setSaved] = useState(false)
   const [charCount, setCharCount] = useState(0)
   const [apiError, setApiError] = useState('')
+  const [activeTab, setActiveTab] = useState('text') // 'text' or 'file'
+  const [authModalOpen, setAuthModalOpen] = useState(false)
   
   const { saveClip, getClip, deleteClip, loading, error } = useClipboard()
+  const { user, isAuthenticated } = useAuth()
 
   useEffect(() => { 
     setCharCount(content.length) 
@@ -91,7 +97,55 @@ export default function ClipPage() {
         {/* Header */}
         <div className="mb-6">
           <h1 className="font-display font-700 text-2xl text-white mb-1">Clipboard</h1>
-          <p className="text-gray-500 text-sm font-body">Enter a key to save or retrieve content</p>
+          <p className="text-gray-500 text-sm font-body">Share text instantly or upload files securely</p>
+        </div>
+
+        {/* User Status */}
+        {isAuthenticated ? (
+          <div className="mb-4 flex items-center gap-2 text-sm">
+            <div className="w-2 h-2 rounded-full bg-green-400"></div>
+            <span className="text-gray-400">Signed in as <span className="text-white">{user.name}</span></span>
+          </div>
+        ) : (
+          <div className="mb-4 p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg flex items-center gap-2">
+            <AlertCircle size={16} className="text-blue-400" />
+            <span className="text-blue-400 text-sm">
+              <button 
+                onClick={() => setAuthModalOpen(true)}
+                className="underline hover:no-underline"
+              >
+                Sign in
+              </button> to upload files and access advanced features
+            </span>
+          </div>
+        )}
+
+        {/* Tab Switcher */}
+        <div className="flex gap-1 mb-6">
+          <button
+            onClick={() => setActiveTab('text')}
+            className={`
+              flex items-center gap-2 px-4 py-2 rounded-lg font-body font-medium text-sm transition-all duration-200
+              ${activeTab === 'text' 
+                ? 'bg-brand-500/20 text-brand-400' 
+                : 'text-gray-400 hover:text-white hover:bg-surface-hover'
+              }
+            `}
+          >
+            <FileText size={14} /> Text
+          </button>
+          <button
+            onClick={() => setActiveTab('file')}
+            className={`
+              flex items-center gap-2 px-4 py-2 rounded-lg font-body font-medium text-sm transition-all duration-200
+              ${activeTab === 'file' 
+                ? 'bg-brand-500/20 text-brand-400' 
+                : 'text-gray-400 hover:text-white hover:bg-surface-hover'
+              }
+            `}
+          >
+            <Upload size={14} /> File
+          </button>
         </div>
 
         {/* Error display */}
@@ -102,121 +156,137 @@ export default function ClipPage() {
           </div>
         )}
 
-        {/* Key input row */}
-        <div className="flex gap-3 mb-4">
-          <div className="flex-1 relative">
-            <Key size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
-            <input
-              type="text"
-              value={key}
-              onChange={e => setKey(e.target.value)}
-              placeholder="your-key"
-              className="input-base pl-9"
-            />
-          </div>
-          <button 
-            onClick={handleLoad} 
-            disabled={!key || loading}
-            className="btn-ghost text-sm py-2 px-4 disabled:opacity-40"
-          >
-            {loading ? 'Loading...' : <><Download size={14} /> Load</>}
-          </button>
-        </div>
-
-        {/* Editor */}
-        <div className="card mb-4 p-0 overflow-hidden glow-blue">
-          {/* Toolbar */}
-          <div className="flex items-center justify-between px-4 py-2.5 border-b border-surface-border/60">
-            <span className="text-xs font-mono text-gray-500">
-              {key ? <span className="text-brand-400">/{key}</span> : 'no key set'}
-            </span>
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-gray-600 font-mono">{charCount} chars</span>
-              <button
-                onClick={handleCopy}
-                disabled={!content}
-                className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-white
-                           glass-hover px-2.5 py-1.5 rounded-lg transition-all duration-200
-                           disabled:opacity-30 disabled:cursor-not-allowed"
+        {/* Content Area */}
+        {activeTab === 'text' ? (
+          <>
+            {/* Key input row */}
+            <div className="flex gap-3 mb-4">
+              <div className="flex-1 relative">
+                <Key size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
+                <input
+                  type="text"
+                  value={key}
+                  onChange={e => setKey(e.target.value)}
+                  placeholder="your-key"
+                  className="input-base pl-9"
+                />
+              </div>
+              <button 
+                onClick={handleLoad} 
+                disabled={!key || loading}
+                className="btn-ghost text-sm py-2 px-4 disabled:opacity-40"
               >
-                {copied ? <Check size={13} className="text-green-400" /> : <Copy size={13} />}
-                {copied ? 'Copied!' : 'Copy'}
-              </button>
-              <button
-                onClick={() => setContent('')}
-                disabled={!content}
-                className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-red-400
-                           glass-hover px-2.5 py-1.5 rounded-lg transition-all duration-200
-                           disabled:opacity-30 disabled:cursor-not-allowed"
-              >
-                <Trash2 size={13} /> Clear
+                {loading ? 'Loading...' : <><Download size={14} /> Load</>}
               </button>
             </div>
-          </div>
-          <textarea
-            value={content}
-            onChange={e => setContent(e.target.value)}
-            placeholder="Paste your text, code, or notes here..."
-            className="w-full bg-transparent text-gray-200 font-mono text-sm px-4 py-4
-                       resize-none focus:outline-none placeholder-gray-600 leading-relaxed"
-            rows={16}
-          />
-        </div>
+            {/* Expiry selector */}
+              <div className="flex items-center gap-2 mb-5">
+                <Clock size={14} className="text-gray-500" />
+                <span className="text-xs text-gray-500 font-body">Expires:</span>
+                <div className="flex gap-1">
+                  {EXPIRY_OPTIONS.map(opt => (
+                    <button
+                      key={opt.value}
+                      onClick={() => setExpiry(opt.value)}
+                      className={
+                        'text-xs px-2.5 py-1 rounded-lg font-body transition-all duration-150 ' +
+                        (expiry === opt.value
+                          ? 'bg-brand-500/25 text-brand-400 border border-brand-500/40'
+                          : 'text-gray-500 hover:text-gray-300 glass-hover')
+                      }
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
 
-        {/* Footer row */}
-        <div className="flex flex-wrap items-center justify-between gap-3">
+            {/* Editor */}
+            <div className="card mb-4 p-0 overflow-hidden glow-blue">
+              {/* Toolbar */}
+              <div className="flex items-center justify-between px-4 py-2.5 border-b border-surface-border/60">
+                <span className="text-xs font-mono text-gray-500">
+                  {key ? <span className="text-brand-400">/{key}</span> : 'no key set'}
+                </span>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-gray-600 font-mono">{charCount} chars</span>
+                  <button
+                    onClick={handleCopy}
+                    disabled={!content}
+                    className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-white
+                               glass-hover px-2.5 py-1.5 rounded-lg transition-all duration-200
+                               disabled:opacity-30 disabled:cursor-not-allowed"
+                  >
+                    {copied ? <Check size={13} className="text-green-400" /> : <Copy size={13} />}
+                    {copied ? 'Copied!' : 'Copy'}
+                  </button>
+                  <button
+                    onClick={() => setContent('')}
+                    disabled={!content}
+                    className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-red-400
+                               glass-hover px-2.5 py-1.5 rounded-lg transition-all duration-200
+                               disabled:opacity-30 disabled:cursor-not-allowed"
+                  >
+                    <Trash2 size={13} /> Clear
+                  </button>
+                </div>
+              </div>
+              <textarea
+                value={content}
+                onChange={e => setContent(e.target.value)}
+                placeholder="Paste your text, code, or notes here..."
+                className="w-full bg-transparent text-gray-200 font-mono text-sm px-4 py-4
+                           resize-none focus:outline-none placeholder-gray-600 leading-relaxed"
+                rows={16}
+              />
+            </div>
 
-          {/* Expiry selector */}
-          <div className="flex items-center gap-2">
-            <Clock size={14} className="text-gray-500" />
-            <span className="text-xs text-gray-500 font-body">Expires:</span>
-            <div className="flex gap-1">
-              {EXPIRY_OPTIONS.map(opt => (
+            {/* Footer row */}
+            <div className="flex flex-wrap items-center justify-between gap-3">
+
+              {/* Actions */}
+              <div className="flex items-center gap-2">
+                {key && content && (
+                  <button
+                    onClick={handleDelete}
+                    disabled={loading}
+                    className="btn-ghost text-sm py-2 px-3 text-red-400 hover:text-red-300"
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                )}
                 <button
-                  key={opt.value}
-                  onClick={() => setExpiry(opt.value)}
-                  className={
-                    'text-xs px-2.5 py-1 rounded-lg font-body transition-all duration-150 ' +
-                    (expiry === opt.value
-                      ? 'bg-brand-500/25 text-brand-400 border border-brand-500/40'
-                      : 'text-gray-500 hover:text-gray-300 glass-hover')
-                  }
+                  onClick={handleSave}
+                  disabled={!key || !content || loading}
+                  className="btn-primary flex items-center gap-2 py-2 text-sm
+                             disabled:opacity-40 disabled:cursor-not-allowed"
                 >
-                  {opt.label}
+                  {loading ? (
+                    <>Loading...</>
+                  ) : saved ? (
+                    <><Check size={15} /> Saved!</>
+                  ) : (
+                    <><Save size={15} /> Save clip</>
+                  )}
                 </button>
-              ))}
+              </div>
             </div>
-          </div>
-
-          {/* Actions */}
-          <div className="flex items-center gap-2">
-            {key && content && (
-              <button
-                onClick={handleDelete}
-                disabled={loading}
-                className="btn-ghost text-sm py-2 px-3 text-red-400 hover:text-red-300"
-              >
-                <Trash2 size={14} />
-              </button>
-            )}
-            <button
-              onClick={handleSave}
-              disabled={!key || !content || loading}
-              className="btn-primary flex items-center gap-2 py-2 text-sm
-                         disabled:opacity-40 disabled:cursor-not-allowed"
-            >
-              {loading ? (
-                <>Loading...</>
-              ) : saved ? (
-                <><Check size={15} /> Saved!</>
-              ) : (
-                <><Save size={15} /> Save clip</>
-              )}
-            </button>
-          </div>
-        </div>
+          </>
+        ) : (
+          /* File Upload Tab */
+          <FileUpload 
+            fileKey={key} 
+            onKeyChange={setKey}
+          />
+        )}
 
       </div>
+
+      {/* Auth Modal */}
+      <AuthModal 
+        isOpen={authModalOpen}
+        onClose={() => setAuthModalOpen(false)}
+      />
     </main>
   )
 }

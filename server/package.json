@@ -8,7 +8,10 @@
     "dev": "nodemon index.js",
     "start": "node index.js"
   },
-  "keywords": ["clipboard", "server"],
+  "keywords": [
+    "clipboard",
+    "server"
+  ],
   "author": "",
   "license": "ISC",
   "dependencies": {
@@ -88,6 +91,7 @@
     "mime-db": "^1.54.0",
     "mime-types": "^3.0.2",
     "minimatch": "^10.2.4",
+    "mongoose": "^9.3.3",
     "morgan": "^1.10.1",
     "ms": "^2.1.3",
     "multer": "^2.1.1",
@@ -133,6 +137,7 @@
     "undefsafe": "^2.0.5",
     "unpipe": "^1.0.0",
     "util-deprecate": "^1.0.2",
+    "uuid": "^13.0.0",
     "vary": "^1.1.2",
     "wrappy": "^1.0.2"
   },
