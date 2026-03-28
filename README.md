@@ -7,6 +7,7 @@ A fast and secure clipboard and file transfer system with both global and local 
 ## 🚀 How to Run the Local Version
 
 The local version is perfect for fast transfers on your local network. It does **not** require MongoDB, Redis, or User Authentication.
+*(Note: When running locally, you can completely ignore the `server` folder, as it is only for the global deployment).*
 
 ### 1. Clone the repository
 ```bash

@@ -140,37 +140,24 @@ export const SETUP_GUIDES = {
     title: " Local Setup (No Database Required)",
     steps: [
       {
-        title: "Download ClipHub",
-        description: "Clone or download the ClipHub repository",
-        code: "git clone https://github.com/Yug1275/cliphub.git\ncd cliphub"
+        title: "Clone the repository",
+        description: "The local version is perfect for fast transfers on your local network. It does not require MongoDB, Redis, or User Authentication. (Note: You can completely ignore the `server` folder when running locally, as it's only for the global version).",
+        code: "git clone <your-repo-link>\ncd ClipHub"
       },
       {
-        title: "Start the Environment", 
-        description: "Install dependencies and launch both frontend and local-server. Local mode uses /local-server and requires NO Mongo/Redis setup!",
-        code: `npm install\nnpm run dev:local\n\n# Or start them individually:\n# cd local-server && npm i && npm run dev\n# cd client && npm i && npm run dev`
-      }
-    ]
-  },
-  globalMode: {
-    title: " Global Mode Setup",
-    steps: [
-      {
-        title: "Download Component",
-        description: "",
-        code: "git clone https://github.com/Yug1275/cliphub.git\ncd cliphub\nnpm install"
+        title: "Install Dependencies", 
+        description: "Install packages for both the client and local server by running this command in the root folder:",
+        code: "npm run install:local"
       },
       {
-        title: "Requirements",
-        description: "Set up MongoDB and Redis for production scaling.",
-        code: `# Ensure MongoDB and Redis are installed
-# Update server/.env
-REDIS_URL=redis://127.0.0.1:6379
-MONGO_URI=mongodb://localhost:27017/cliphub`
+        title: "Start the Local Server",
+        description: "Open a new terminal and run. The local server will start on port 5001.",
+        code: "cd local-server\nnpm run dev"
       },
       {
-         title: "Start the Server",
-         description: "",
-         code: "npm run dev:global"
+        title: "Start the Client (Website)",
+        description: "Open a second terminal and run. The client will start in standalone (local) mode.",
+        code: "cd client\nnpm run dev"
       }
     ]
   }
