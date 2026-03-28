@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useAuth } from './useAuth';
+import { API_URL } from '../utils/api';
 
 export const useFileUpload = () => {
   const [uploading, setUploading] = useState(false);
@@ -48,7 +49,7 @@ export const useFileUpload = () => {
 
   const downloadFile = async (key, password = null) => {
     try {
-      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+      
       let url = `${API_URL}/api/file/${key}`;
       
       if (password) {

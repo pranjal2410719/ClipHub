@@ -1,8 +1,9 @@
-import { useState } from 'react'
+﻿import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ArrowRight, Zap, Globe, Lock, Clock, Copy, Upload, QrCode, Eye, Shield } from 'lucide-react'
 import { motion } from 'framer-motion'
 import AnimatedCard from '../components/AnimatedCard'
+import { isLocal } from '../utils/api'
 
 const FEATURES = [
   { icon: Zap,    title: 'Instant sharing',    desc: 'Paste text and share in seconds. No signup, no friction.' },
@@ -123,6 +124,29 @@ export default function HomePage() {
           ClipHub is a universal clipboard bridge. Share text instantly, upload files securely, 
           and control access with passwords, view limits, and QR codes.
         </motion.p>
+
+        {/* Mode Toggle */}
+        <motion.div variants={itemVariants} className="flex justify-center mb-8">
+          <div className="bg-black/20 p-1 rounded-lg inline-flex gap-1 border border-white/5">
+            {isLocal ? (
+              <button className="px-4 py-1.5 rounded-md text-sm font-medium bg-blue-500/20 text-blue-400">
+                Local Mode
+              </button>
+            ) : (
+              <>
+                <button className="px-4 py-1.5 rounded-md text-sm font-medium bg-blue-500/20 text-blue-400">
+                  Global Mode
+                </button>
+                <button 
+                  onClick={() => window.open('/docs', '_blank')}
+                  className="px-4 py-1.5 rounded-md text-sm font-medium text-gray-400 hover:text-white transition-colors"
+                >
+                  Local Mode
+                </button>
+              </>
+            )}
+          </div>
+        </motion.div>
 
         {/* Key Input Form */}
         <motion.form

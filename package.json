@@ -4,13 +4,22 @@
   "type": "module",
   "description": "Universal clipboard and file transfer system",
   "scripts": {
-    "dev": "npm run server",
+    "dev:global": "concurrently \"npm run server\" \"npm run client\"",
+    "dev:local": "concurrently \"cd local-server && npm run dev\" \"cd client && npm run dev:local\"",
     "server": "cd server && npm run dev",
     "client": "cd client && npm run dev",
     "build": "cd client && npm run build",
     "start": "cd server && npm start"
   },
-  "keywords": ["clipboard", "file-transfer", "redis", "express"],
-  "author": "Your Name",
-  "license": "MIT"
+  "keywords": [
+    "clipboard",
+    "file-transfer",
+    "redis",
+    "express"
+  ],
+  "author": "Yug",
+  "license": "MIT",
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  }
 }

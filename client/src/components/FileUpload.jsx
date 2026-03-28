@@ -1,14 +1,16 @@
-import { useState, useRef } from 'react';
-import { 
-  Upload, File, X, Download, Trash2, AlertCircle, QrCode, 
-  Lock, Eye, EyeOff, Shield, Users 
+﻿import { useState, useRef } from 'react';
+import {
+  Upload, File, X, Download, Trash2, AlertCircle, QrCode,
+  Lock, Eye, EyeOff, Shield, Users
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { useFileUpload } from '../hooks/useFileUpload';
 import { useAuth } from '../hooks/useAuth';
 import { useToast } from './Toast';
 import QRCodeModal from './QRCodeModal';
 import PasswordModal from './PasswordModal';
 import OverwriteWarning from './OverwriteWarning';
+import { isLocal } from '../utils/api';
 
 const FILE_EXPIRY_OPTIONS = [
   { label: '1 hour', value: '1h' },
@@ -42,11 +44,12 @@ export default function FileUpload({ fileKey, onKeyChange }) {
   const [existingFileInfo, setExistingFileInfo] = useState(null);
   
   // Detect default mode based on IP, allow user to toggle it
-  const defaultIsLocal = /^192\.168\.|^10\.|^172\.(1[6-9]|2[0-9]|3[0-1])\.|^localhost$|^127\.0\.0\.1$/.test(window.location.hostname);
+  const defaultIsLocal = isLocal;
   const [uploadMode, setUploadMode] = useState(defaultIsLocal ? 'local' : 'global');
   const isLocalMode = uploadMode === 'local';
 
   const fileInputRef = useRef(null);
+  const navigate = useNavigate();
 
   const { uploadFile, downloadFile, deleteFile, checkFileExists, uploading, error } = useFileUpload();
   const { isAuthenticated } = useAuth();
@@ -158,7 +161,7 @@ export default function FileUpload({ fileKey, onKeyChange }) {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
-  if (!isAuthenticated) {
+if (!isLocal && !isAuthenticated) {
     return (
       <div className="card border-2 border-dashed border-gray-600 text-center py-8">
         <AlertCircle size={32} className="mx-auto text-gray-500 mb-3" />
@@ -200,39 +203,40 @@ export default function FileUpload({ fileKey, onKeyChange }) {
       </div>
 
       {/* Network Mode Toggle */}
-      <div className="flex items-center gap-3 p-3 bg-white/5 rounded-xl border border-white/10">
-        <div className="flex-1">
-          <p className="text-sm font-medium text-white">Network Mode</p>
-          <p className="text-xs text-gray-400">
-            {isLocalMode 
-              ? 'Local Mode: Unlimited size & any file type'
-              : 'Global Mode: Max 10MB per file'}
-          </p>
+      {!isLocal && (
+        <div className="flex items-center gap-3 p-3 bg-white/5 rounded-xl border border-white/10">
+          <div className="flex-1">
+            <p className="text-sm font-medium text-white">Network Mode</p>        
+            <p className="text-xs text-gray-400">
+              {isLocalMode
+                ? 'Local Mode: Unlimited size & any file type'
+                : 'Global Mode: Max 10MB per file'}
+            </p>
+          </div>
+          <div className="flex gap-1 bg-black/40 p-1 rounded-lg">
+            <button
+              onClick={() => setUploadMode('global')}
+              className={`px-3 py-1.5 text-xs rounded-md transition-all ${        
+                !isLocalMode
+                  ? 'bg-brand-500/20 text-brand-400 border border-brand-500/30'   
+                  : 'text-gray-400 hover:text-white'
+              }`}
+            >
+              Global
+            </button>
+            <button
+              onClick={() => navigate('/docs')}
+              className={`px-3 py-1.5 text-xs rounded-md transition-all ${        
+                isLocalMode
+                  ? 'bg-brand-500/20 text-brand-400 border border-brand-500/30'   
+                  : 'text-gray-400 hover:text-white'
+              }`}
+            >
+              Local
+            </button>
+          </div>
         </div>
-        <div className="flex gap-1 bg-black/40 p-1 rounded-lg">
-          <button
-            onClick={() => setUploadMode('global')}
-            className={`px-3 py-1.5 text-xs rounded-md transition-all ${
-              !isLocalMode 
-                ? 'bg-brand-500/20 text-brand-400 border border-brand-500/30' 
-                : 'text-gray-400 hover:text-white'
-            }`}
-          >
-            Global
-          </button>
-          <button
-            onClick={() => setUploadMode('local')}
-            className={`px-3 py-1.5 text-xs rounded-md transition-all ${
-              isLocalMode 
-                ? 'bg-brand-500/20 text-brand-400 border border-brand-500/30' 
-                : 'text-gray-400 hover:text-white'
-            }`}
-          >
-            Local
-          </button>
-        </div>
-      </div>
-
+      )}
       {error && (
         <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg flex items-center gap-2">
           <AlertCircle size={16} className="text-red-400" />

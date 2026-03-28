@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+﻿import { useState, useEffect, useRef } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import {
   Copy, Check, Save, Clock, Trash2, Key, Download, AlertCircle,
@@ -17,6 +17,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import StatusIndicator from '../components/StatusIndicator'
 import AnimatedCard from '../components/AnimatedCard'
 import { LoadingSpinner } from '../components/LoadingSpinner'
+import { isLocal } from '../utils/api'
 
 const EXPIRY_OPTIONS = [
   { label: '1 min', value: '1m' },
@@ -247,7 +248,14 @@ export default function ClipPage() {
         </div>
 
         {/* User Status */}
-        {isAuthenticated ? (
+        {isLocal ? (
+          <div className="mb-4 p-3 bg-brand-500/10 border border-brand-500/20 rounded-lg flex items-center gap-2">
+            <AlertCircle size={16} className="text-brand-400" />
+            <span className="text-brand-400 text-sm">
+              Running in Local Mode. For Global sharing, visit <a href="https://cliphub.netlify.app" target="_blank" rel="noopener noreferrer" className="underline hover:no-underline font-medium">cliphub.netlify.app</a>
+            </span>
+          </div>
+        ) : isAuthenticated ? (
           <div className="mb-4 flex items-center gap-2 text-sm">
             <div className="w-2 h-2 rounded-full bg-green-400"></div>
             <span className="text-gray-400">Signed in as <span className="text-white">{user.name}</span></span>
@@ -534,9 +542,11 @@ export default function ClipPage() {
         ) : (
           /* File Upload Tab */
           <>
-            <div className="mb-4 p-3 bg-brand-500/10 border border-brand-500/20 rounded-lg text-sm text-gray-300">
-              💡 <strong className="text-brand-400">Tip:</strong> For transferring large files, select <strong>Local Mode</strong>. For small files up to 10MB, use <strong>Global Mode</strong>.
-            </div>
+            {!isLocal && (
+              <div className="mb-4 p-3 bg-brand-500/10 border border-brand-500/20 rounded-lg text-sm text-gray-300">
+                💡 <strong className="text-brand-400">Tip:</strong> For transferring large files, select <strong>Local Mode</strong>. For small files up to 10MB, use <strong>Global Mode</strong>.
+              </div>
+            )}
             <FileUpload
               fileKey={key}
               onKeyChange={setKey}

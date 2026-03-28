@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { QRCodeCanvas } from 'qrcode.react';
 import { X, Download, Share2, Check } from 'lucide-react';
 import { useToast } from './Toast';
+import { isLocal as isLocalMode } from '../utils/api';
 
 const LOCAL_PORT = '5173';
 const DEFAULT_LOCAL_IP = '10.110.48.205';
@@ -22,7 +23,7 @@ export default function QRCodeModal({
   title = 'Share QR Code'
 }) {
   const [copied, setCopied] = useState(false);
-  const [mode, setMode] = useState('local');
+  const mode = isLocalMode ? 'local' : 'global';
   const [localIP, setLocalIP] = useState(() => localStorage.getItem(LOCAL_IP_STORAGE_KEY) || DEFAULT_LOCAL_IP);
   const localInputRef = useRef(null);
   const toast = useToast();
@@ -132,34 +133,8 @@ export default function QRCodeModal({
         <div className="text-center">
           <h3 className="font-display font-600 text-xl text-white mb-2">{title}</h3>
           <p className="text-gray-400 text-sm mb-6">
-            Choose Local or Global sharing and scan to open instantly
+            {mode === 'local' ? 'Scan to open on your local network' : 'Scan to open instantly'}
           </p>
-
-          {/* Mode Selector */}
-          <div className="glass rounded-lg p-3 mb-4 flex items-center justify-center gap-6">
-            <label className="inline-flex items-center gap-2 text-sm text-gray-200 cursor-pointer">
-              <input
-                type="radio"
-                name="qr-mode"
-                value="local"
-                checked={mode === 'local'}
-                onChange={() => setMode('local')}
-                className="accent-brand-500"
-              />
-              Local
-            </label>
-            <label className="inline-flex items-center gap-2 text-sm text-gray-200 cursor-pointer">
-              <input
-                type="radio"
-                name="qr-mode"
-                value="global"
-                checked={mode === 'global'}
-                onChange={() => setMode('global')}
-                className="accent-brand-500"
-              />
-              Global
-            </label>
-          </div>
 
           {/* Local IP Input */}
           {mode === 'local' && (

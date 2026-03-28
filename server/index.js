@@ -27,6 +27,7 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 const HOST = process.env.HOST || '0.0.0.0';
 const ENABLE_HTTP_LOGS = process.env.ENABLE_HTTP_LOGS === 'true';
+const APP_MODE = process.env.APP_MODE || 'global';
 
 // Security middleware
 app.use(helmet({
@@ -57,6 +58,19 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Rate limiting
 app.use('/api', rateLimiter(60000, 100)); // 100 requests per minute
+
+// Mode enforcement middleware
+app.use((req, res, next) => {
+  if (APP_MODE === 'local') {
+    const isLocalRequest = req.hostname === 'localhost' || req.ip === '127.0.0.1' || req.ip === '::1';
+    if (!isLocalRequest) {
+      return res.status(403).json({
+        message: "Local mode only available in local setup",
+      });
+    }
+  }
+  next();
+});
 
 // Static file serving for uploads (public access)
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
@@ -131,11 +145,15 @@ app.use((req, res) => {
 // Start server
 const startServer = async () => {
   try {
-    // Connect to Redis
-    await connectRedis();
+    if (APP_MODE !== 'local') {
+      // Connect to Redis
+      await connectRedis();
 
-    // Connect to MongoDB
-    await connectDB();
+      // Connect to MongoDB
+      await connectDB();
+    } else {
+      console.log('🏠 Running in LOCAL MODE: In-memory storage only (No Redis/MongoDB)');
+    }
 
     // Create HTTP server
     const server = createServer(app);

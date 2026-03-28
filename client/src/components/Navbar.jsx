@@ -7,6 +7,7 @@ import { useAuth } from '../hooks/useAuth'
 import ProfileSidebar from './ProfileSidebar'
 import { resolveMediaUrl } from '../utils/imageUrl'
 import { motion, AnimatePresence } from 'framer-motion'
+import { isLocal } from '../utils/api'
 
 export default function Navbar() {
   const { pathname } = useLocation()
@@ -82,24 +83,26 @@ export default function Navbar() {
 
             <DarkModeToggle />
 
-            <button
-              onClick={() => setSidebarOpen(true)}
-              className="flex items-center gap-2 glass glass-hover px-3 py-2 rounded-xl transition-all duration-300"
-            >
-              <div className="w-7 h-7 rounded-full overflow-hidden border border-white/10 bg-slate-800 flex items-center justify-center">
-                {isAuthenticated && profileImage ? (
-                  <img
-                    src={profileImage}
-                    alt="Profile"
-                    className="w-full h-full object-cover"
-                    onError={handleProfileImageError}
-                  />
-                ) : (
-                  <User size={14} className="text-gray-400" />
-                )}
-              </div>
-              <span className="text-sm text-white">{isAuthenticated ? user?.name : 'Profile'}</span>
-            </button>
+            {!isLocal && (
+              <button
+                onClick={() => setSidebarOpen(true)}
+                className="flex items-center gap-2 glass glass-hover px-3 py-2 rounded-xl transition-all duration-300"
+              >
+                <div className="w-7 h-7 rounded-full overflow-hidden border border-white/10 bg-slate-800 flex items-center justify-center">
+                  {isAuthenticated && profileImage ? (
+                    <img
+                      src={profileImage}
+                      alt="Profile"
+                      className="w-full h-full object-cover"
+                      onError={handleProfileImageError}
+                    />
+                  ) : (
+                    <User size={14} className="text-gray-400" />
+                  )}
+                </div>
+                <span className="text-sm text-white">{isAuthenticated ? user?.name : 'Profile'}</span>
+              </button>
+            )}
           </div>
 
           <button
@@ -142,29 +145,29 @@ export default function Navbar() {
             </Link>
           ))}
 
-
-
-          <button
-            onClick={() => {
-              setSidebarOpen(true)
-              setMenuOpen(false)
-            }}
-            className="w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm text-gray-300 hover:text-white hover:bg-white/5 transition-colors duration-300"
-          >
-            <div className="w-6 h-6 rounded-full overflow-hidden border border-white/10 bg-slate-800 flex items-center justify-center">
-              {isAuthenticated && profileImage ? (
-                <img
-                  src={profileImage}
-                  alt="Profile"
-                  className="w-full h-full object-cover"
-                  onError={handleProfileImageError}
-                />
-              ) : (
-                <User size={13} className="text-gray-400" />
-              )}
-            </div>
-            {isAuthenticated ? user?.name : 'Profile'}
-          </button>
+          {!isLocal && (
+            <button
+              onClick={() => {
+                setSidebarOpen(true)
+                setMenuOpen(false)
+              }}
+              className="w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm text-gray-300 hover:text-white hover:bg-white/5 transition-colors duration-300"
+            >
+              <div className="w-6 h-6 rounded-full overflow-hidden border border-white/10 bg-slate-800 flex items-center justify-center">
+                {isAuthenticated && profileImage ? (
+                  <img
+                    src={profileImage}
+                    alt="Profile"
+                    className="w-full h-full object-cover"
+                    onError={handleProfileImageError}
+                  />
+                ) : (
+                  <User size={13} className="text-gray-400" />
+                )}
+              </div>
+              {isAuthenticated ? user?.name : 'Profile'}
+            </button>
+          )}
         </div>
       )}
 

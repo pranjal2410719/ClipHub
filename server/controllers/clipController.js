@@ -2,6 +2,21 @@ import { getRedisClient } from '../config/redis.js';
 import { getSecondsFromExpiry, isOneTimeExpiry } from '../utils/ttl.js';
 import bcrypt from 'bcryptjs';
 
+const APP_MODE = process.env.APP_MODE || 'global';
+const localStore = new Map();
+
+// Auto cleanup for local store
+if (APP_MODE === 'local') {
+  setInterval(() => {
+    const now = Date.now();
+    for (const [key, value] of localStore) {
+      if (value.expiryTime && value.expiryTime < now) {
+        localStore.delete(key);
+      }
+    }
+  }, 5000);
+}
+
 export const saveClip = async (req, res) => {
   try {
     const { key, content, expiry = '1h', password, maxViews } = req.body;
@@ -27,12 +42,8 @@ export const saveClip = async (req, res) => {
       });
     }
 
-    const redis = getRedisClient();
     const ttlSeconds = getSecondsFromExpiry(expiry);
 
-    // Check if key already exists
-    const exists = await redis.exists(`clip:${key}`);
-    
     // Create clip data
     const clipData = {
       content,
@@ -47,15 +58,25 @@ export const saveClip = async (req, res) => {
       createdBy: req.ip
     };
 
-    // Save to Redis with TTL
-    await redis.setEx(`clip:${key}`, ttlSeconds, JSON.stringify(clipData));
+    let exists = false;
+
+    if (APP_MODE === 'local') {
+      exists = localStore.has(key);
+      const storedData = { ...clipData };
+      storedData.expiryTime = Date.now() + (ttlSeconds * 1000);
+      localStore.set(key, storedData);
+    } else {
+      const redis = getRedisClient();
+      exists = await redis.exists(`clip:${key}`);
+      await redis.setEx(`clip:${key}`, ttlSeconds, JSON.stringify(clipData));
+    }
 
     res.json({
       success: true,
       message: exists ? 'Clip updated successfully' : 'Clip saved successfully',
       key,
       expiresIn: ttlSeconds,
-      overwritten: exists === 1,
+      overwritten: !!exists,
       hasPassword: !!password,
       maxViews: clipData.maxViews,
       url: `${req.protocol}://${req.get('host')}/clip?key=${key}`,
@@ -72,17 +93,28 @@ export const getClip = async (req, res) => {
   try {
     const { key } = req.params;
     const { password } = req.query;
-    const redis = getRedisClient();
 
-    const clipDataString = await redis.get(`clip:${key}`);
-    
-    if (!clipDataString) {
-      return res.status(404).json({ 
-        error: 'Clip not found or has expired' 
-      });
+    let clipData = null;
+    let remainingTTL = 0;
+
+    if (APP_MODE === 'local') {
+      const data = localStore.get(key);
+      if (!data) return res.status(404).json({ error: 'Clip not found or has expired' });
+      
+      if (data.expiryTime < Date.now()) {
+        localStore.delete(key);
+        return res.status(404).json({ error: 'Clip not found or has expired' });
+      }
+      clipData = data;
+      remainingTTL = Math.floor((data.expiryTime - Date.now()) / 1000);
+    } else {
+      const redis = getRedisClient();
+      const clipDataString = await redis.get(`clip:${key}`);
+      if (!clipDataString) return res.status(404).json({ error: 'Clip not found or has expired' });
+      
+      clipData = JSON.parse(clipDataString);
+      remainingTTL = await redis.ttl(`clip:${key}`);
     }
-
-    const clipData = JSON.parse(clipDataString);
 
     // Check password protection
     if (clipData.hasPassword) {
@@ -92,7 +124,6 @@ export const getClip = async (req, res) => {
           requiresPassword: true
         });
       }
-
       const isValidPassword = await bcrypt.compare(password, clipData.password);
       if (!isValidPassword) {
         return res.status(401).json({
@@ -104,7 +135,8 @@ export const getClip = async (req, res) => {
 
     // Check view limit
     if (clipData.maxViews && clipData.viewCount >= clipData.maxViews) {
-      await redis.del(`clip:${key}`);
+      if (APP_MODE === 'local') localStore.delete(key);
+      else await getRedisClient().del(`clip:${key}`);
       return res.status(410).json({
         error: 'This clip has reached its maximum view limit and has been deleted'
       });
@@ -118,16 +150,17 @@ export const getClip = async (req, res) => {
                         (clipData.maxViews && clipData.viewCount >= clipData.maxViews);
 
     if (shouldDelete) {
-      // Delete the clip after this view
-      await redis.del(`clip:${key}`);
+      if (APP_MODE === 'local') localStore.delete(key);
+      else await getRedisClient().del(`clip:${key}`);
+      remainingTTL = 0;
     } else {
-      // Update the view count
-      const ttl = await redis.ttl(`clip:${key}`);
-      await redis.setEx(`clip:${key}`, ttl, JSON.stringify(clipData));
+      if (APP_MODE === 'local') {
+        localStore.set(key, clipData);
+      } else {
+        const redis = getRedisClient();
+        await redis.setEx(`clip:${key}`, remainingTTL, JSON.stringify(clipData));
+      }
     }
-
-    // Get remaining TTL
-    const remainingTTL = shouldDelete ? 0 : await redis.ttl(`clip:${key}`);
 
     res.json({
       success: true,
@@ -152,14 +185,17 @@ export const getClip = async (req, res) => {
 export const deleteClip = async (req, res) => {
   try {
     const { key } = req.params;
-    const redis = getRedisClient();
+    let deleted = false;
 
-    const deleted = await redis.del(`clip:${key}`);
-    
-    if (deleted === 0) {
-      return res.status(404).json({ 
-        error: 'Clip not found' 
-      });
+    if (APP_MODE === 'local') {
+      deleted = localStore.delete(key);
+    } else {
+      const redis = getRedisClient();
+      deleted = (await redis.del(`clip:${key}`)) > 0;
+    }
+
+    if (!deleted) {
+      return res.status(404).json({ error: 'Clip not found' });
     }
 
     res.json({
@@ -176,18 +212,30 @@ export const deleteClip = async (req, res) => {
 export const getClipInfo = async (req, res) => {
   try {
     const { key } = req.params;
-    const redis = getRedisClient();
+    let clipData = null;
+    let remainingTTL = 0;
 
-    const clipDataString = await redis.get(`clip:${key}`);
-    
-    if (!clipDataString) {
-      return res.status(404).json({ 
-        error: 'Clip not found or has expired' 
-      });
+    if (APP_MODE === 'local') {
+      clipData = localStore.get(key);
+      if (clipData && clipData.expiryTime < Date.now()) {
+        localStore.delete(key);
+        clipData = null;
+      }
+      if (clipData) {
+        remainingTTL = Math.floor((clipData.expiryTime - Date.now()) / 1000);
+      }
+    } else {
+      const redis = getRedisClient();
+      const clipDataString = await redis.get(`clip:${key}`);
+      if (clipDataString) {
+        clipData = JSON.parse(clipDataString);
+        remainingTTL = await redis.ttl(`clip:${key}`);
+      }
     }
 
-    const clipData = JSON.parse(clipDataString);
-    const remainingTTL = await redis.ttl(`clip:${key}`);
+    if (!clipData) {
+      return res.status(404).json({ error: 'Clip not found or has expired' });
+    }
 
     res.json({
       success: true,
@@ -212,19 +260,32 @@ export const getClipInfo = async (req, res) => {
   }
 };
 
-// New endpoint for checking if clip exists before overwrite
 export const checkClipExists = async (req, res) => {
   try {
     const { key } = req.params;
-    const redis = getRedisClient();
+    let clipData = null;
+    let remainingTTL = 0;
 
-    const exists = await redis.exists(`clip:${key}`);
-    
-    if (exists) {
-      const clipDataString = await redis.get(`clip:${key}`);
-      const clipData = JSON.parse(clipDataString);
-      const remainingTTL = await redis.ttl(`clip:${key}`);
+    if (APP_MODE === 'local') {
+      clipData = localStore.get(key);
+      if (clipData && clipData.expiryTime < Date.now()) {
+        localStore.delete(key);
+        clipData = null;
+      }
+      if (clipData) {
+        remainingTTL = Math.floor((clipData.expiryTime - Date.now()) / 1000);
+      }
+    } else {
+      const redis = getRedisClient();
+      const exists = await redis.exists(`clip:${key}`);
+      if (exists) {
+        const clipDataString = await redis.get(`clip:${key}`);
+        clipData = JSON.parse(clipDataString);
+        remainingTTL = await redis.ttl(`clip:${key}`);
+      }
+    }
 
+    if (clipData) {
       res.json({
         exists: true,
         info: {
