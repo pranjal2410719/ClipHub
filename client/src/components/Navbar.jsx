@@ -8,6 +8,7 @@ import ProfileSidebar from './ProfileSidebar'
 import { resolveMediaUrl } from '../utils/imageUrl'
 import { motion, AnimatePresence } from 'framer-motion'
 import { isLocal } from '../utils/api'
+import logoImg from '../assets/cliphub.png'
 
 export default function Navbar() {
   const { pathname } = useLocation()
@@ -47,7 +48,7 @@ export default function Navbar() {
       <nav className="fixed top-0 left-0 right-0 z-50 glass border-b border-white/10">
         <div className="w-full px-6 h-16 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2.5 group">
-            <img src="/src/assets/cliphub.png" alt="ClipHub Logo" className="w-8 h-8 rounded-lg group-hover:opacity-80 transition-opacity duration-300" />
+            <img src={logoImg} alt="ClipHub Logo" className="w-8 h-8 rounded-lg group-hover:opacity-80 transition-opacity duration-300" />
             <span className="font-bold text-white text-lg tracking-tight">
               Clip<span className="text-blue-400">Hub</span>
             </span>
