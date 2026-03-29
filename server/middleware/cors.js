@@ -8,6 +8,7 @@ const corsOptions = {
     const localNetworkRegex = /^http:\/\/(192\.168\.|10\.|172\.(1[6-9]|2[0-9]|3[0-1])\.)[\d.]+:\d+$/;
     const allowedOrigins = [
       'https://cliphub.netlify.app',
+      'https://clipdothub.netlify.app',
       process.env.CLIENT_URL
     ].filter(Boolean);
 

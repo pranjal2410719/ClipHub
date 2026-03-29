@@ -11,8 +11,11 @@ export const initializeSocket = (server) => {
       origin: [
         'http://localhost:5173',
         'http://localhost:3000',
-        /^http:\/\/(192\.168\.|10\.|172\.(1[6-9]|2[0-9]|3[0-1])\.)[\d.]+:(5173|3000)$/
-      ],
+        /^http:\/\/(192\.168\.|10\.|172\.(1[6-9]|2[0-9]|3[0-1])\.)[\d.]+:(5173|3000)$/,
+        'https://cliphub.netlify.app',
+        'https://clipdothub.netlify.app',
+        process.env.CLIENT_URL
+      ].filter(Boolean),
       methods: ['GET', 'POST'],
       credentials: true
     }
