@@ -138,7 +138,7 @@ export default function HomePage() {
                   Global Mode
                 </button>
                 <button 
-                  onClick={() => window.open('/docs', '_blank')}
+                  onClick={() => navigate('/docs?section=local-setup')}
                   className="px-4 py-1.5 rounded-md text-sm font-medium text-gray-400 hover:text-white transition-colors"
                 >
                   Local Mode

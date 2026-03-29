@@ -142,7 +142,7 @@ export const SETUP_GUIDES = {
       {
         title: "Clone the repository",
         description: "The local version is perfect for fast transfers on your local network. It does not require MongoDB, Redis, or User Authentication. (Note: You can completely ignore the `server` folder when running locally, as it's only for the global version).",
-        code: "git clone <your-repo-link>\ncd ClipHub"
+        code: "git clone https://github.com/Yug1275/ClipHub.git\ncd ClipHub"
       },
       {
         title: "Install Dependencies", 
@@ -157,7 +157,7 @@ export const SETUP_GUIDES = {
       {
         title: "Start the Client (Website)",
         description: "Open a second terminal and run. The client will start in standalone (local) mode.",
-        code: "cd client\nnpm run dev"
+        code: "cd ClipHub\ncd client\nnpm run dev"
       }
     ]
   }

@@ -6,8 +6,11 @@ import {
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAuth } from '../hooks/useAuth'
+import { useSearchParams } from 'react-router-dom'
 import APIExample from '../components/docs/APIExample'
 import SetupGuide from '../components/docs/SetupGuide'
+import { useNavigate } from 'react-router-dom'
+
 
 // Import the data we created earlier
 import { API_EXAMPLES, SETUP_GUIDES } from '../data/apiExamples'
@@ -69,7 +72,13 @@ export default function DocsPage() {
   const { isAuthenticated } = useAuth()
   const [key, setKey] = useState("")
 
-  const [activeSection, setActiveSection] = useState('getting-started')
+  const [searchParams] = useSearchParams()
+
+  const navigate = useNavigate()
+
+  const [activeSection, setActiveSection] = useState(
+    searchParams.get('section') || 'getting-started'
+  )
   const [searchTerm, setSearchTerm] = useState('')
   const [copied, setCopied] = useState(false)
 
@@ -226,7 +235,6 @@ export default function DocsPage() {
         return (
           <div className="space-y-8">
             <div className="prose prose-invert max-w-none">
-              <h3 className="text-xl font-semibold text-white mb-6">File Sharing Guide</h3>
 
               {!isLocal && (
                 <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-4 mb-6">
@@ -235,48 +243,82 @@ export default function DocsPage() {
                   </p>
                 </div>
               )}
-              <div>
+
+              {/* File Types */}
+              <div className="space-y-6">
                 <div>
-                  <p className="font-medium text-blue-400 mb-2">Images</p>
-                  <p className="text-gray-300">JPG, PNG, GIF, WebP</p>
+                  <h4 className="font-semibold text-white mb-4">Cloud Mode File Types</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                    <div className="card p-4">
+                      <p className="font-medium text-blue-400 mb-2">Images</p>
+                      <p className="text-gray-300">JPG, PNG, GIF, WebP</p>
+                    </div>
+
+                    <div className="card p-4">
+                      <p className="font-medium text-green-400 mb-2">Documents</p>
+                      <p className="text-gray-300">PDF, DOC, XLS, PPT</p>
+                    </div>
+
+                    <div className="card p-4">
+                      <p className="font-medium text-purple-400 mb-2">Archives</p>
+                      <p className="text-gray-300">ZIP, RAR, 7Z</p>
+                    </div>
+
+                    <div className="card p-4">
+                      <p className="font-medium text-red-400 mb-2">Code</p>
+                      <p className="text-gray-300">JSON, JS, HTML, CSS</p>
+                    </div>
+                  </div>
                 </div>
+
                 <div>
-                  <p className="font-medium text-green-400 mb-2">Documents</p>
-                  <p className="text-gray-300">PDF, DOC, XLS, PPT</p>
-                </div>
-                <div>
-                  <p className="font-medium text-purple-400 mb-2">Archives</p>
-                  <p className="text-gray-300">ZIP, RAR, 7Z</p>
-                </div>
-                <div>
-                  <p className="font-medium text-red-400 mb-2">Code</p>
-                  <p className="text-gray-300">JSON, JS, HTML, CSS</p>
+                  <h4 className="font-semibold text-white mb-4">Local Mode File Types</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div className="card p-4 border border-brand-500/30 bg-brand-500/5">
+                      <p className="font-medium text-brand-400 mb-2">Everything in Global Mode</p>
+                      <p className="text-gray-300">Images, Documents, Archives, Code</p>
+                    </div>
+
+                    <div className="card p-4">
+                      <p className="font-medium text-yellow-400 mb-2">Video</p>
+                      <p className="text-gray-300">MP4, WEBM, MKV, AVI</p>
+                    </div>
+
+                    <div className="card p-4">
+                      <p className="font-medium text-pink-400 mb-2">Audio</p>
+                      <p className="text-gray-300">MP3, WAV, OGG, M4A</p>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
-            <div>
-              <div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="card p-6">
-                    <h4 className="font-semibold text-white mb-3">📱 Local Mode</h4>
-                    <ul className="space-y-2 text-gray-300 text-sm">
-                      <li>• Unlimited file size</li>
-                      <li>• Any file type supported</li>
-                      <li>• Perfect for large files</li>
-                      <li>• Works on your network only</li>
-                    </ul>
-                  </div>
-                  <div className="card p-6">
-                    <h4 className="font-semibold text-white mb-3">☁️ Cloud Mode</h4>
-                    <ul className="space-y-2 text-gray-300 text-sm">
-                      <li>• 10MB file size limit</li>
-                      <li>• Specific file types only</li>
-                      <li>• Global internet access</li>
-                      <li>• Great for sharing anywhere</li>
-                    </ul>
-                  </div>
-                </div>
+            {/* Local vs Cloud */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="card p-6">
+                <h4 className="font-semibold text-white mb-3">📱 Local Mode</h4>
+                <ul className="space-y-2 text-gray-300 text-sm">
+                  <li>• Unlimited file size</li>
+                  <li>• Any file type supported</li>
+                  <li>• Perfect for large files</li>
+                  <li>• Works on your network only</li>
+                  <li>
+                    • Files are uploaded to the{" "}
+                    <code className="bg-white/10 px-1 py-0.5 rounded">
+                      /ClipHub/uploads
+                    </code>
+                  </li>
+                </ul>
+              </div>
+
+              <div className="card p-6">
+                <h4 className="font-semibold text-white mb-3">☁️ Cloud Mode</h4>
+                <ul className="space-y-2 text-gray-300 text-sm">
+                  <li>• 10MB file size limit</li>
+                  <li>• Specific file types only</li>
+                  <li>• Global internet access</li>
+                  <li>• Great for sharing anywhere</li>
+                </ul>
               </div>
             </div>
           </div>

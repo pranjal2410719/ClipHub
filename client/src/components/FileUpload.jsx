@@ -11,6 +11,7 @@ import { LoadingSpinner } from './LoadingSpinner';
 import QRCodeModal from './QRCodeModal';
 import PasswordModal from './PasswordModal';
 import OverwriteWarning from './OverwriteWarning';
+import AuthModal from './AuthModal';
 import { isLocal } from '../utils/api';
 
 const FILE_EXPIRY_OPTIONS = [
@@ -43,7 +44,8 @@ export default function FileUpload({ fileKey, onKeyChange }) {
   const [passwordModalOpen, setPasswordModalOpen] = useState(false);
   const [overwriteWarningOpen, setOverwriteWarningOpen] = useState(false);
   const [existingFileInfo, setExistingFileInfo] = useState(null);
-  
+  const [authModalOpen, setAuthModalOpen] = useState(false);
+
   // Detect default mode based on IP, allow user to toggle it
   const defaultIsLocal = isLocal;
   const [uploadMode, setUploadMode] = useState(defaultIsLocal ? 'local' : 'global');
@@ -74,7 +76,7 @@ export default function FileUpload({ fileKey, onKeyChange }) {
   const handleDrop = (e) => {
     e.preventDefault();
     setDragActive(false);
-    
+
     const file = e.dataTransfer.files[0];
     if (file) handleFileSelect(file);
   };
@@ -116,7 +118,7 @@ export default function FileUpload({ fileKey, onKeyChange }) {
 
   const handleDownload = async (inputPassword = null) => {
     if (!fileKey) return;
-    
+
     try {
       await downloadFile(fileKey, inputPassword);
       toast.success('Download started!');
@@ -135,7 +137,7 @@ export default function FileUpload({ fileKey, onKeyChange }) {
 
   const handleDelete = async () => {
     if (!fileKey) return;
-    
+
     try {
       await deleteFile(fileKey);
       setSelectedFile(null);
@@ -178,19 +180,28 @@ export default function FileUpload({ fileKey, onKeyChange }) {
     return `${mins}m ${secs}s remaining`;
   };
 
-if (!isLocal && !isAuthenticated) {
+  if (!isLocal && !isAuthenticated) {
     return (
-      <div className="card border-2 border-dashed border-gray-600 text-center py-8">
-        <AlertCircle size={32} className="mx-auto text-gray-500 mb-3" />
-        <p className="text-gray-400 mb-2">File uploads require authentication</p>
-        <p className="text-gray-500 text-sm">Sign in to upload and share files securely</p>
-      </div>
+      <>
+        <div
+          onClick={() => setAuthModalOpen(true)}
+          className="card border-2 border-dashed border-gray-600 text-center py-8 cursor-pointer hover:border-brand-500 hover:bg-brand-500/5 transition-all"
+        >
+          <AlertCircle size={32} className="mx-auto text-gray-500 mb-3" />
+          <p className="text-gray-400 mb-2">File uploads require authentication</p>
+          <p className="text-gray-500 text-sm">Sign in to upload and share files securely</p>
+        </div>
+        <AuthModal
+          isOpen={authModalOpen}
+          onClose={() => setAuthModalOpen(false)}
+        />
+      </>
     );
   }
 
   return (
     <div className="space-y-4">
-      
+
       {/* File Key Input */}
       <div className="flex gap-3">
         <div className="flex-1 relative">
@@ -223,7 +234,7 @@ if (!isLocal && !isAuthenticated) {
       {!isLocal && (
         <div className="flex items-center gap-3 p-3 bg-white/5 rounded-xl border border-white/10">
           <div className="flex-1">
-            <p className="text-sm font-medium text-white">Network Mode</p>        
+            <p className="text-sm font-medium text-white">Network Mode</p>
             <p className="text-xs text-gray-400">
               {isLocalMode
                 ? 'Local Mode: Unlimited size & any file type'
@@ -233,21 +244,19 @@ if (!isLocal && !isAuthenticated) {
           <div className="flex gap-1 bg-black/40 p-1 rounded-lg">
             <button
               onClick={() => setUploadMode('global')}
-              className={`px-3 py-1.5 text-xs rounded-md transition-all ${        
-                !isLocalMode
-                  ? 'bg-brand-500/20 text-brand-400 border border-brand-500/30'   
+              className={`px-3 py-1.5 text-xs rounded-md transition-all ${!isLocalMode
+                  ? 'bg-brand-500/20 text-brand-400 border border-brand-500/30'
                   : 'text-gray-400 hover:text-white'
-              }`}
+                }`}
             >
               Global
             </button>
             <button
-              onClick={() => navigate('/docs')}
-              className={`px-3 py-1.5 text-xs rounded-md transition-all ${        
-                isLocalMode
-                  ? 'bg-brand-500/20 text-brand-400 border border-brand-500/30'   
+              onClick={() => navigate('/docs?section=local-setup')} 
+              className={`px-3 py-1.5 text-xs rounded-md transition-all ${isLocalMode
+                  ? 'bg-brand-500/20 text-brand-400 border border-brand-500/30'
                   : 'text-gray-400 hover:text-white'
-              }`}
+                }`}
             >
               Local
             </button>
@@ -272,8 +281,8 @@ if (!isLocal && !isAuthenticated) {
       <div
         className={`
           border-2 border-dashed rounded-xl p-8 text-center transition-all duration-200 cursor-pointer
-          ${dragActive 
-            ? 'border-brand-500 bg-brand-500/10' 
+          ${dragActive
+            ? 'border-brand-500 bg-brand-500/10'
             : 'border-gray-600 hover:border-gray-500'
           }
         `}
@@ -292,7 +301,7 @@ if (!isLocal && !isAuthenticated) {
         />
 
         <Upload size={32} className="mx-auto text-gray-500 mb-3" />
-        
+
         {selectedFile ? (
           <div className="space-y-2">
             <p className="text-white font-medium">{selectedFile.name}</p>
@@ -334,7 +343,7 @@ if (!isLocal && !isAuthenticated) {
 
           {showAdvancedOptions && (
             <div className="glass rounded-xl p-4 space-y-4">
-              
+
               {/* Password Protection */}
               <div>
                 <label className="block text-sm text-gray-300 mb-2 flex items-center gap-2">
@@ -428,7 +437,7 @@ if (!isLocal && !isAuthenticated) {
                   )}
                 </div>
               )}
-              
+
               <button
                 onClick={handleDelete}
                 disabled={!fileKey}
