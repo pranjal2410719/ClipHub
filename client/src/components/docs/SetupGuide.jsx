@@ -27,24 +27,24 @@ export default function SetupGuide({ guide, icon: Icon }) {
         </div>
       </div>
 
-      <div className="flex">
+      <div className="flex flex-col md:flex-row">
         {/* Steps Sidebar */}
-        <div className="w-64 border-r border-white/10 bg-black/20">
+        <div className="w-full md:w-64 border-b md:border-b-0 md:border-r border-white/10 bg-black/20 flex md:flex-col overflow-x-auto md:overflow-visible hide-scrollbar flex-shrink-0">
           {guide.steps.map((step, index) => (
             <button
               key={index}
               onClick={() => setActiveStep(index)}
               className={`
-                w-full px-4 py-3 text-left border-b border-white/5 transition-colors
+                flex-shrink-0 md:w-full px-4 py-3 text-left border-b-2 md:border-b md:border-r-2 transition-colors
                 ${activeStep === index 
-                  ? 'bg-blue-500/15 border-r-2 border-r-blue-400' 
-                  : 'hover:bg-white/5'
+                  ? 'bg-blue-500/15 border-b-blue-400 md:border-b-white/5 md:border-r-blue-400' 
+                  : 'border-b-transparent md:border-b-white/5 md:border-r-transparent hover:bg-white/5'
                 }
               `}
             >
               <div className="flex items-center gap-3">
                 <div className={`
-                  w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium
+                  flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium
                   ${activeStep === index 
                     ? 'bg-blue-500 text-white' 
                     : activeStep > index
@@ -55,7 +55,7 @@ export default function SetupGuide({ guide, icon: Icon }) {
                   {activeStep > index ? '✓' : index + 1}
                 </div>
                 <span className={`
-                  text-sm font-medium
+                  text-sm font-medium whitespace-nowrap md:whitespace-normal
                   ${activeStep === index ? 'text-white' : 'text-gray-400'}
                 `}>
                   {step.title}
@@ -66,7 +66,7 @@ export default function SetupGuide({ guide, icon: Icon }) {
         </div>
 
         {/* Step Content */}
-        <div className="flex-1 p-6">
+        <div className="flex-1 p-6 min-w-0 overflow-hidden">
           <AnimatePresence mode="wait">
             <motion.div
               key={activeStep}

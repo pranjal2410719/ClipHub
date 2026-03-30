@@ -127,7 +127,7 @@ export default function Navbar() {
       </nav>
 
       {menuOpen && (
-        <div className="fixed top-16 left-0 right-0 z-40 md:hidden glass border-t border-white/10 px-4 py-3 space-y-1">
+        <div className="fixed top-16 left-0 right-0 z-40 md:hidden glass bg-[#0d1117]/95 border-t border-white/10 px-4 py-3 space-y-1">
           {links.map(({ to, label }) => (
             <Link
               key={to}

@@ -149,7 +149,7 @@ export default function ProfileSidebar({ isOpen, onClose }) {
                   <div className="relative">
                     <button
                       onClick={() => imageUrl && setPreviewOpen(true)}
-                      className="w-44 h-44 rounded-full border border-blue-400/30 bg-slate-900 overflow-hidden shadow-[0_0_30px_rgba(59,130,246,0.25)] flex items-center justify-center"
+                      className="w-32 h-32 md:w-44 md:h-44 flex-shrink-0 rounded-full border border-blue-400/30 bg-slate-900 overflow-hidden shadow-[0_0_30px_rgba(59,130,246,0.25)] flex items-center justify-center relative z-10"
                     >
                       {imageUrl ? (
                         <img
@@ -159,14 +159,14 @@ export default function ProfileSidebar({ isOpen, onClose }) {
                           onError={handleImageError}
                         />
                       ) : (
-                        <User size={68} className="text-gray-500" />
+                        <User size={48} className="text-gray-500 md:w-16 md:h-16" />
                       )}
                     </button>
 
                     <button
                       onClick={() => fileInputRef.current?.click()}
                       disabled={uploading}
-                      className="absolute right-1 bottom-1 w-11 h-11 rounded-full bg-blue-500 hover:bg-blue-400 disabled:opacity-60 transition-colors duration-300 flex items-center justify-center text-white border border-blue-300/40"
+                      className="absolute right-0 bottom-0 md:right-1 md:bottom-1 w-10 h-10 md:w-11 md:h-11 rounded-full bg-blue-500 hover:bg-blue-400 disabled:opacity-60 transition-colors duration-300 flex items-center justify-center text-white border border-blue-300/40 z-20"
                     >
                       {uploading ? <Loader2 size={18} className="animate-spin" /> : <Camera size={18} />}
                     </button>

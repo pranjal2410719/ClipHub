@@ -43,13 +43,13 @@ export default function APIExample({ example }) {
       </div>
 
       {/* Tabs */}
-      <div className="flex border-b border-white/10">
+      <div className="flex border-b border-white/10 overflow-x-auto hide-scrollbar">
         {tabs.map(({ id, label, icon: Icon }) => (
           <button
             key={id}
             onClick={() => setActiveTab(id)}
             className={`
-              flex items-center gap-2 px-4 py-3 text-sm font-medium transition-colors
+              flex-shrink-0 flex items-center gap-2 px-4 py-3 text-sm font-medium transition-colors
               ${activeTab === id 
                 ? 'text-blue-400 border-b-2 border-blue-400 bg-blue-500/5' 
                 : 'text-gray-400 hover:text-white hover:bg-white/5'
