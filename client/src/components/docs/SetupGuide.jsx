@@ -97,23 +97,24 @@ export default function SetupGuide({ guide, icon: Icon }) {
               )}
 
               {/* Navigation */}
-              <div className="flex items-center justify-between mt-6 pt-4 border-t border-white/10">
+              <div className="flex items-center justify-between gap-2 mt-6 pt-4 border-t border-white/10">
                 <button
                   onClick={() => setActiveStep(Math.max(0, activeStep - 1))}
                   disabled={activeStep === 0}
-                  className="btn-ghost py-2 px-4 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="btn-ghost py-2 px-3 sm:px-4 text-sm sm:text-base whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Previous
                 </button>
-                <span className="text-sm text-gray-400">
-                  {activeStep + 1} of {guide.steps.length}
+                <span className="text-xs sm:text-sm text-gray-400 whitespace-nowrap">
+                  <span className="hidden sm:inline">{activeStep + 1} of {guide.steps.length}</span>
+                  <span className="sm:hidden">{activeStep + 1} / {guide.steps.length}</span>
                 </span>
                 <button
                   onClick={() => setActiveStep(Math.min(guide.steps.length - 1, activeStep + 1))}
                   disabled={activeStep === guide.steps.length - 1}
-                  className="btn-primary py-2 px-4 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="btn-primary py-2 px-3 sm:px-4 text-sm sm:text-base flex items-center justify-center gap-1 whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Next <ChevronRight size={14} />
+                  Next <ChevronRight size={14} className="flex-shrink-0" />
                 </button>
               </div>
             </motion.div>
