@@ -146,16 +146,16 @@ export default function DocsPage() {
                 Try it Now
               </h4>
               <div className="bg-black/30 rounded-lg p-4 space-y-3">
-                <div className="flex gap-3">
+                <div className="flex flex-col sm:flex-row gap-3">
                   <input
                     type="text"
                     placeholder="Enter a key (e.g. demo-123)"
                     value={key}
                     onChange={(e) => setKey(e.target.value)}
-                    className="flex-1 bg-gray-800 border border-gray-700 rounded px-3 py-2 text-white text-sm"
+                    className="flex-1 bg-gray-800 border border-gray-700 rounded px-3 py-2 text-white text-sm min-w-0"
                   />
                   <a
-                    href={`/clip?key=${key}`} className="btn-primary py-2 px-4 text-sm"
+                    href={`/clip?key=${key}`} className="btn-primary py-2 px-4 text-sm whitespace-nowrap text-center"
                   >
                     Open Clip
                   </a>
@@ -625,7 +625,7 @@ socket.emit('content-change', {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           {/* Sidebar */}
           <div className="lg:col-span-3">
-            <div className="glass rounded-2xl p-2 sticky top-24 z-20 flex overflow-x-auto lg:flex-col gap-2 lg:gap-0 hide-scrollbar">
+            <div className="glass rounded-2xl p-2 sticky top-24 z-20 flex flex-col gap-2 hide-scrollbar">
               {filteredSections.map((section) => {
                 const Icon = section.icon
                 const isActive = activeSection === section.id
@@ -633,17 +633,18 @@ socket.emit('content-change', {
                   <motion.button
                     key={section.id}
                     onClick={() => setActiveSection(section.id)}
-                    className={`flex-shrink-0 lg:w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all ${isActive ? 'bg-brand-500/20 text-brand-400' : 'hover:bg-white/5 text-gray-300'
+                    className={`w-full flex justify-between items-center gap-3 px-4 py-3 rounded-xl text-left transition-all ${isActive ? 'bg-brand-500/20 text-brand-400' : 'hover:bg-white/5 text-gray-300'
                       }`}
                     whileHover={{ x: 4 }}
                   >
-                    <Icon size={18} className="flex-shrink-0" />
-                    <div className="hidden lg:block flex-1 min-w-0">
-                      <span className="font-medium text-sm block truncate">{section.title}</span>
-                      <span className="text-xs text-gray-500 block truncate">{section.desc}</span>
+                    <div className="flex items-center gap-3 flex-1 min-w-0">
+                      <Icon size={18} className="flex-shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <span className="font-medium text-sm block truncate">{section.title}</span>
+                        <span className="text-xs text-gray-500 block truncate">{section.desc}</span>
+                      </div>
                     </div>
-                    <span className="lg:hidden text-sm font-medium whitespace-nowrap">{section.title}</span>
-                    {isActive && <ChevronRight size={14} className="hidden lg:block flex-shrink-0" />}
+                    {isActive && <ChevronRight size={14} className="flex-shrink-0" />}
                   </motion.button>
                 )
               })}
