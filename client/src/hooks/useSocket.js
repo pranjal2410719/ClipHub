@@ -7,6 +7,7 @@ export const useSocket = () => {
   const [isConnected, setIsConnected] = useState(false);
   const [activeUsers, setActiveUsers] = useState([]);
   const [typingUsers, setTypingUsers] = useState(new Set());
+  const typingTimeoutRef = useRef(new Map());
 
   useEffect(() => {
     if (isLocal) {
@@ -47,6 +48,21 @@ export const useSocket = () => {
 
     socket.on('user-typing', (data) => {
       setTypingUsers(prev => new Set([...prev, data.socketId]));
+      
+      // Setup auto-clear timeout for this user
+      const existingTimeout = typingTimeoutRef.current.get(data.socketId);
+      if (existingTimeout) clearTimeout(existingTimeout);
+      
+      const newTimeout = setTimeout(() => {
+        setTypingUsers(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(data.socketId);
+          return newSet;
+        });
+        typingTimeoutRef.current.delete(data.socketId);
+      }, 4000);
+      
+      typingTimeoutRef.current.set(data.socketId, newTimeout);
     });
 
     socket.on('user-stopped-typing', (data) => {
@@ -55,20 +71,18 @@ export const useSocket = () => {
         newSet.delete(data.socketId);
         return newSet;
       });
+      
+      const existingTimeout = typingTimeoutRef.current.get(data.socketId);
+      if (existingTimeout) {
+        clearTimeout(existingTimeout);
+        typingTimeoutRef.current.delete(data.socketId);
+      }
     });
 
-    // Cleanup typing indicators after timeout
-    const cleanupTyping = setInterval(() => {
-      setTypingUsers(prev => {
-        if (prev.size > 0) {
-          return new Set(); // Clear all typing indicators periodically
-        }
-        return prev;
-      });
-    }, 3000);
-
     return () => {
-      clearInterval(cleanupTyping);
+      typingTimeoutRef.current.forEach(timeout => clearTimeout(timeout));
+      typingTimeoutRef.current.clear();
+      
       if (socketRef.current) {
         socketRef.current.disconnect();
       }
@@ -97,15 +111,15 @@ export const useSocket = () => {
     }
   };
 
-  const emitTypingStart = () => {
-    if (socketRef.current) {
-      socketRef.current.emit('typing-start');
+  const emitTypingStart = (key) => {
+    if (socketRef.current && key) {
+      socketRef.current.emit('typing-start', { key });
     }
   };
 
-  const emitTypingStop = () => {
-    if (socketRef.current) {
-      socketRef.current.emit('typing-stop');
+  const emitTypingStop = (key) => {
+    if (socketRef.current && key) {
+      socketRef.current.emit('typing-stop', { key });
     }
   };
 

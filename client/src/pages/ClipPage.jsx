@@ -56,7 +56,7 @@ export default function ClipPage() {
   const socket = useSocket()
   const [lastContentUpdate, setLastContentUpdate] = useState(null)
   const [isTyping, setIsTyping] = useState(false)
-  const typingTimeoutRef = useRef(null)
+  const [typingTimeout, setTypingTimeout] = useState(null)
   const [passwordModalOpen, setPasswordModalOpen] = useState(false)
   const [overwriteWarningOpen, setOverwriteWarningOpen] = useState(false)
   const [existingClipInfo, setExistingClipInfo] = useState(null)
@@ -98,31 +98,14 @@ export default function ClipPage() {
     }
   }, [key, socket.isConnected, user?.name])
 
-  // Typing indicator
+  // Clear typing timeout on unmount
   useEffect(() => {
-    if (isTyping) {
-      socket.emitTypingStart()
-
-      // Clear existing timeout
-      if (typingTimeoutRef.current) {
-        clearTimeout(typingTimeoutRef.current)
-      }
-
-      // Set new timeout to stop typing indicator
-      typingTimeoutRef.current = setTimeout(() => {
-        setIsTyping(false)
-        socket.emitTypingStop()
-      }, 2000)
-    } else {
-      socket.emitTypingStop()
-    }
-
     return () => {
-      if (typingTimeoutRef.current) {
-        clearTimeout(typingTimeoutRef.current)
+      if (typingTimeout) {
+        clearTimeout(typingTimeout)
       }
     }
-  }, [isTyping])
+  }, [typingTimeout])
 
   const handleCopy = async () => {
     try {
@@ -139,10 +122,24 @@ export default function ClipPage() {
     const newContent = e.target.value
     setContent(newContent)
 
-    // Real-time updates
-    if (key && socket.isConnected && user?.name) {
+    if (key && socket.isConnected) {
       socket.emitContentChange(key, newContent)
-      setIsTyping(true)
+      
+      if (!isTyping) {
+        setIsTyping(true)
+        socket.emitTypingStart(key)
+      }
+      
+      if (typingTimeout) {
+        clearTimeout(typingTimeout)
+      }
+      
+      const newTimeout = setTimeout(() => {
+        setIsTyping(false)
+        socket.emitTypingStop(key)
+      }, 2000)
+      
+      setTypingTimeout(newTimeout)
     }
   }
 

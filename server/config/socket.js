@@ -4,6 +4,7 @@ import { getRedisClient } from './redis.js';
 
 let io;
 const activeEditors = new Map(); // Store active editors per clip key
+const typingUsers = new Map(); // Store typing users per room
 
 export const initializeSocket = (server) => {
   io = new Server(server, {
@@ -80,18 +81,46 @@ export const initializeSocket = (server) => {
     });
 
     // Handle typing indicators
-    socket.on('typing-start', () => {
-      if (socket.clipKey) {
-        socket.to(`clip:${socket.clipKey}`).emit('user-typing', {
+    socket.on('typing-start', (data) => {
+      let key = data?.key || socket.clipKey;
+      if (key) {
+        const room = `clip:${key}`;
+        if (!typingUsers.has(room)) {
+          typingUsers.set(room, new Set());
+        }
+        typingUsers.get(room).add(socket.id);
+        
+        socket.to(room).emit('user-typing', {
           userName: socket.userName,
           socketId: socket.id
         });
+
+        // Auto-stop typing after 3 seconds
+        clearTimeout(socket.typingTimeout);
+        socket.typingTimeout = setTimeout(() => {
+          if (typingUsers.has(room)) {
+            typingUsers.get(room).delete(socket.id);
+            if (typingUsers.get(room).size === 0) typingUsers.delete(room);
+          }
+          socket.to(room).emit('user-stopped-typing', {
+            userName: socket.userName,
+            socketId: socket.id
+          });
+        }, 3000);
       }
     });
 
-    socket.on('typing-stop', () => {
-      if (socket.clipKey) {
-        socket.to(`clip:${socket.clipKey}`).emit('user-stopped-typing', {
+    socket.on('typing-stop', (data) => {
+      let key = data?.key || socket.clipKey;
+      if (key) {
+        const room = `clip:${key}`;
+        if (typingUsers.has(room)) {
+          typingUsers.get(room).delete(socket.id);
+          if (typingUsers.get(room).size === 0) typingUsers.delete(room);
+        }
+        clearTimeout(socket.typingTimeout);
+        
+        socket.to(room).emit('user-stopped-typing', {
           userName: socket.userName,
           socketId: socket.id
         });
@@ -120,8 +149,19 @@ export const initializeSocket = (server) => {
   const handleUserLeave = (socket) => {
     if (socket.clipKey) {
       const key = socket.clipKey;
+      const room = `clip:${key}`;
       const editors = activeEditors.get(key);
       
+      // Cleanup typing indicators
+      clearTimeout(socket.typingTimeout);
+      if (typingUsers.has(room)) {
+        typingUsers.get(room).delete(socket.id);
+        if (typingUsers.get(room).size === 0) typingUsers.delete(room);
+        socket.to(room).emit('user-stopped-typing', {
+          socketId: socket.id
+        });
+      }
+
       if (editors) {
         // Remove user from active editors
         const userToRemove = Array.from(editors).find(user => user.socketId === socket.id);

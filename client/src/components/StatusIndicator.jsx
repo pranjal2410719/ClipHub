@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from 'framer-motion';
-import { Users, Wifi, WifiOff, Eye } from 'lucide-react';
+import { Users, Wifi, WifiOff, Eye, Edit3 } from 'lucide-react';
 import { PulsingCircle } from './LoadingSpinner';
 
 export default function StatusIndicator({ 
@@ -11,6 +11,19 @@ export default function StatusIndicator({
   if (!isVisible) return null;
 
   const typingCount = typingUsers.size;
+  const typingUserNames = activeUsers
+    .filter(u => typingUsers.has(u.socketId))
+    .map(u => u.userName)
+    .slice(0, 3);
+
+  let typingText = '';
+  if (typingCount === 1) {
+    typingText = `${typingUserNames[0] || '1 person'} typing...`;
+  } else if (typingCount > 1 && typingCount <= 3) {
+    typingText = `${typingUserNames.join(', ')} typing...`;
+  } else if (typingCount > 3) {
+    typingText = `${typingCount} people typing...`;
+  }
 
   return (
     <AnimatePresence>
@@ -60,17 +73,17 @@ export default function StatusIndicator({
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: 'auto' }}
                 exit={{ opacity: 0, height: 0 }}
-                className="flex items-center gap-2 pt-2 border-t border-surface-border/40"
+                className="flex items-center gap-2 pt-2 border-t border-surface-border/40 overflow-hidden"
               >
                 <motion.div
-                  animate={{ opacity: [0.5, 1, 0.5] }}
-                  transition={{ duration: 1, repeat: Infinity }}
-                  className="text-xs text-yellow-400"
+                  animate={{ scale: [1, 1.2, 1], opacity: [0.5, 1, 0.5] }}
+                  transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
+                  className="text-yellow-400"
                 >
-                  <Eye size={12} />
+                  <Edit3 size={12} />
                 </motion.div>
-                <span className="text-xs text-yellow-400">
-                  {typingCount} editing...
+                <span className="text-xs text-yellow-400 truncate max-w-[150px]">
+                  {typingText}
                 </span>
               </motion.div>
             )}
